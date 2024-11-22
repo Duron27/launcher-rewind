@@ -154,10 +154,11 @@ class UserManageAssets(val context: Context) {
                 ButtonID_5(60.0;1668.5325;561.5578;false;52;Color.Black;0.25;null)
                 ButtonID_6(60.0;1335.1458;770.3131;false;62;Color.Black;0.25;null)
                 ButtonID_7(60.0;750.73267;770.3131;false;66;Color.Black;0.25;null)
-                ButtonID_98(160.0;1199.7069;216.80106;false;98;Color.Green;0.25;null)
-                ButtonID_99(200.0;200.56776;281.6349;false;29;Color.Black;0.25;null)
+                ButtonID_99(160.0;200.56776;281.6349;false;29;Color.Black;0.25;null)
             """.trimIndent())
         }
+
+        // ButtonID_98(160.0;1199.7069;216.80106;false;98;Color.Green;0.25;null)
 
         // copy user settings file
         if (!File(Constants.SETTINGS_FILE).exists()) {

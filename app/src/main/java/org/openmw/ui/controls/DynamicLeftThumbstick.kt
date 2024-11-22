@@ -106,7 +106,6 @@ fun ResizableDraggableThumbstick(
         logAllButtonStates()
     }
 
-
     AnimatedVisibility(
         visible = visible,
         enter = slideInVertically(

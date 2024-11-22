@@ -2,6 +2,7 @@ package org.openmw
 
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Process
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -21,6 +22,7 @@ import org.openmw.ui.controls.ScaleView
 import org.openmw.ui.controls.UIStateManager
 import org.openmw.ui.controls.UIStateManager.createdButtons
 import org.openmw.ui.controls.UIStateManager.editMode
+import org.openmw.ui.controls.UIStateManager.enableRightThumb
 import org.openmw.ui.controls.UIStateManager.gridAlpha
 import org.openmw.ui.controls.UIStateManager.gridVisible
 import org.openmw.ui.controls.loadButtonState
@@ -70,8 +72,11 @@ class ConfigureControls : AppCompatActivity() { // Use AppCompatActivity for sim
         scaleView.sdlView = sdlView
         scaleView.scaleSdlView(isScaled)
 
-        // Load UI saved buttons, 99 is the Thumbstick. Without these 3 lines the button loader will read 99
+        // Load UI saved buttons, 99 and 98 is the Thumbstick. Without these 3 lines the button loader will read 99
         // from the UI.cfg file and create a duplicate as a button
+        // Clear previously created buttons and state
+        createdButtons.clear()
+        UIStateManager.buttonStates.clear()
         val allButtons = loadButtonState(this@ConfigureControls)
         val thumbstick = allButtons.find { it.id in listOf(99, 98) }
         createdButtons.addAll(allButtons.filter { it.id !in listOf(99, 98) })
@@ -118,10 +123,12 @@ class ConfigureControls : AppCompatActivity() { // Use AppCompatActivity for sim
                 )
             }
 
-            ResizableDraggableRightThumbstick(
-                context = this,
-                id = 98
-            )
+            if (enableRightThumb) {
+                ResizableDraggableRightThumbstick(
+                    context = this,
+                    id = 98,
+                )
+            }
         }
     }
 

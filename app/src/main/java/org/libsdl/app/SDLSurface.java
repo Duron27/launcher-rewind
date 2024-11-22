@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import org.openmw.EngineActivity;
+import org.openmw.ui.controls.UIStateManager;
 
 /**
     SDLSurface. This is what we draw on, so we need to know when it's created
@@ -251,9 +252,12 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
             touchDevId -= 1;
         }
 
-        if ((action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) &&
-            SDLActivity.isMouseShown() == 0)
-        return false;
+        // Access the Kotlin object property in Java
+        if (UIStateManager.INSTANCE.getEnableRightThumb() &&
+                (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) &&
+                SDLActivity.isMouseShown() == 0) {
+            return false;
+        }
 
         // 12290 = Samsung DeX mode desktop mouse
         // 12290 = 0x3002 = 0x2002 | 0x1002 = SOURCE_MOUSE | SOURCE_TOUCHSCREEN

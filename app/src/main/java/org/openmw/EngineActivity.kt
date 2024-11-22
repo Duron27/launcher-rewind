@@ -32,6 +32,7 @@ import org.openmw.ui.controls.ScaleView
 import org.openmw.ui.controls.UIStateManager
 import org.openmw.ui.controls.UIStateManager.REQUEST_CODE_PICK_IMAGE
 import org.openmw.ui.controls.UIStateManager.createdButtons
+import org.openmw.ui.controls.UIStateManager.enableRightThumb
 import org.openmw.ui.controls.UIStateManager.editMode
 import org.openmw.ui.controls.UIStateManager.gridAlpha
 import org.openmw.ui.controls.UIStateManager.gridVisible
@@ -134,8 +135,11 @@ class EngineActivity : SDLActivity() {
             // Ensure the correct initial state of the cursor
             setupInitialScaleState()
 
-            // Load UI saved buttons, 99 is the Thumbstick. Without these 3 lines the button loader will read 99
+            // Load UI saved buttons, 99 and 98 is the Thumbstick. Without these 3 lines the button loader will read 99
             // from the UI.cfg file and create a duplicate as a button
+            // Clear previously created buttons and state
+            createdButtons.clear()
+            UIStateManager.buttonStates.clear()
             val allButtons = loadButtonState(this@EngineActivity)
             val thumbstick = allButtons.find { it.id in listOf(99, 98) }
             createdButtons.addAll(allButtons.filter { it.id !in listOf(99, 98) })
@@ -212,10 +216,12 @@ class EngineActivity : SDLActivity() {
                     )
                 }
 
-                ResizableDraggableRightThumbstick(
-                    context = this,
-                    id = 98,
-                )
+                if (enableRightThumb) {
+                    ResizableDraggableRightThumbstick(
+                        context = this,
+                        id = 98,
+                    )
+                }
             }
         }
     }

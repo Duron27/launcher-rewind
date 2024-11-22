@@ -1,6 +1,8 @@
 package org.openmw.ui.controls
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import android.view.KeyEvent
@@ -46,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
@@ -71,18 +74,20 @@ fun copyAndRenameImage(context: Context, sourceUri: Uri, destinationDir: File, b
     val contentResolver = context.contentResolver
     val inputStream: InputStream? = contentResolver.openInputStream(sourceUri)
 
-    // Extract the file extension from the source URI
-    val fileExtension = contentResolver.getType(sourceUri)?.let { mimeType ->
-        MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-    } ?: "jpg" // Default to jpg if the extension cannot be determined
-
-    val destinationFile = File(destinationDir, "$buttonId.$fileExtension")
+    val destinationFile = File(destinationDir, "$buttonId.png")
 
     return if (inputStream != null) {
-        val outputStream = FileOutputStream(destinationFile)
-        inputStream.copyTo(outputStream)
+        val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
+
+        if (!destinationDir.exists()) {
+            destinationDir.mkdirs()
+        }
+
+        val outputStream = FileOutputStream(destinationFile)
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
         outputStream.close()
+
         destinationFile
     } else {
         null
@@ -160,11 +165,8 @@ fun ResizableDraggableButton(
     onDelete: (Int) -> Unit
 ) {
     val buttonState = UIStateManager.buttonStates.getOrPut(id) {
-        val extensions = listOf("jpg", "png", "jpeg", "gif")
-        val existingFile = extensions.map { ext ->
-            File("${context.filesDir}/${Constants.USER_UI}/${id}.$ext")
-        }.firstOrNull { it.exists() }
-        val uri = existingFile?.let { Uri.fromFile(it) }
+        val existingFile = File("${context.filesDir}/${Constants.USER_UI}/${id}.png")
+        val uri = if (existingFile.exists()) Uri.fromFile(existingFile) else null
         mutableStateOf(ButtonState(id, 60f, 0f, 0f, false, keyCode, "Black", 0.25f, uri = uri))
     }.value
 
@@ -414,7 +416,7 @@ fun ResizableDraggableButton(
                             Image(
                                 painter = painter,
                                 contentDescription = null,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize().alpha(buttonAlpha)
                             )
                         } else if (true) {
                             Text(
@@ -446,7 +448,6 @@ fun ResizableDraggableButton(
                                 tint = Color.White
                             )
                         }
-
 
                         if (showControlsPopup) {
                             Popup(

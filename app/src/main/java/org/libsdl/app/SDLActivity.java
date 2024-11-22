@@ -55,10 +55,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.Hashtable;
 import java.util.Locale;
 
-import org.openmw.EngineActivity;
-import org.openmw.MainActivity;
-
-
 /**
     SDL Activity
 */
@@ -949,7 +945,6 @@ public class SDLActivity extends AppCompatActivity implements View.OnSystemUiVis
 
     public static native void omwSurfaceDestroyed();
     public static native void omwSurfaceRecreated();
-
 
     /**
      * This method is called by SDL using JNI.

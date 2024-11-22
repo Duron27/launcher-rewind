@@ -28,6 +28,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -44,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import org.openmw.Constants
+import org.openmw.ui.controls.UIStateManager.enableRightThumb
 import java.io.File
 
 data class ButtonState(
@@ -64,6 +67,7 @@ object UIStateManager {
     var isVibrationEnabled by mutableStateOf(true)
     var isScaleView by mutableStateOf(false)
     var isCursorVisible by mutableStateOf(false)
+    var enableRightThumb by mutableStateOf(false)
 
     // Add the shared states
     var memoryInfoText by mutableStateOf("")
@@ -111,14 +115,16 @@ fun saveButtonState(context: Context, state: List<ButtonState>) {
         file.createNewFile()
     }
 
-    val thumbsticks = state.filter { it.id in listOf(99, 98) }
-    val existingStates = state.filter { it.id !in listOf(99, 98) }.toMutableList()
+    val thumbsticks = state.filter { it.id in listOf(99) } // Include only 99 by default
+    val optionalThumbstick = state.find { it.id == 98 } // Find 98 if it exists
+    val existingStates = state.filterNot { it.id in listOf(98, 99) }.toMutableList()
     existingStates.addAll(thumbsticks)
+    optionalThumbstick?.let { existingStates.add(it) } // Add 98 only if it exists
 
     file.printWriter().use { out ->
         existingStates.forEach { button ->
             val uriString = button.uri?.let { uri ->
-                // Ensure the URI string always points to the file in the USER_CONFIG directory with the button ID and appropriate extension
+                // Ensure the URI string always points to the file in the USER_UI directory with the button ID and appropriate extension
                 val extension = uri.toString().substringAfterLast(".")
                 "File(\"${Constants.USER_UI}/${button.id}.$extension"
             } ?: "null"
@@ -141,7 +147,9 @@ fun loadButtonState(context: Context): List<ButtonState> {
         return emptyList()
     }
 
-    return lines.mapNotNull { line ->
+    var foundButton98 = false
+
+    val buttonStates = lines.mapNotNull { line ->
         val regex = """ButtonID_(\d+)\(([\d.]+);([\d.]+);([\d.]+);(true|false);(\d+);Color\.(\w+);([\d.]+);(.+)\)""".toRegex()
         val matchResult = regex.find(line)
         println("Processing line: $line")
@@ -154,6 +162,10 @@ fun loadButtonState(context: Context): List<ButtonState> {
             val buttonId = it.groupValues[1].toInt()
             val uriString = it.groupValues[9]
             val uri = if (uriString == "null") null else Uri.parse("file://${Constants.USER_UI}/${buttonId}.${uriString.substringAfterLast(".")}")
+
+            if (buttonId == 98) {
+                foundButton98 = true
+            }
 
             val buttonState = ButtonState(
                 id = buttonId,
@@ -178,10 +190,15 @@ fun loadButtonState(context: Context): List<ButtonState> {
             buttonState
         }
     }
+
+    // Set enableRightThumb to true if ButtonID_98 is found
+    UIStateManager.enableRightThumb = foundButton98
+
+    return buttonStates
 }
 
 @Composable
-fun KeySelectionMenu(onKeySelected: (Int) -> Unit, usedKeys: List<Int>, editMode: Boolean) {
+fun KeySelectionMenu(context: Context, onKeySelected: (Int) -> Unit, usedKeys: List<Int>, editMode: Boolean) {
     // Add A, S, D, and W to usedKeys
     val reservedKeys = listOf(
         KeyEvent.KEYCODE_A,
@@ -347,6 +364,46 @@ fun KeySelectionMenu(onKeySelected: (Int) -> Unit, usedKeys: List<Int>, editMode
                             }
                         }
                     }
+                    HorizontalDivider(color = Color.White, thickness = 1.dp, modifier = Modifier.padding(vertical = 16.dp))
+                    Text(
+                        text = "Enable Right Thumbstick.",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Switch(
+                        checked = enableRightThumb,
+                        onCheckedChange = { isChecked ->
+                            enableRightThumb = isChecked
+                            UIStateManager.enableRightThumb = isChecked
+                            if (isChecked) {
+                                // Logic to add ButtonID_98
+                                val allButtons = loadButtonState(context)
+                                val otherButtons = allButtons.filterNot { it.id in listOf(98, 99) }
+                                val newButtonState = ButtonState(
+                                    id = 98,
+                                    size = 160f,
+                                    offsetX = 1199.7069f,
+                                    offsetY = 216.80106f,
+                                    isLocked = false,
+                                    keyCode = 98,
+                                    color = "Green",
+                                    alpha = 0.25f,
+                                    uri = null
+                                )
+                                saveButtonState(context, otherButtons + newButtonState)
+                            } else {
+                                // Logic to remove ButtonID_98
+                                val allButtons = loadButtonState(context)
+                                val otherButtons = allButtons.filterNot { it.id == 98 }
+                                saveButtonState(context, otherButtons)
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.Green,
+                            uncheckedThumbColor = Color.Gray
+                        )
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = {
@@ -385,8 +442,8 @@ fun DynamicButtonManager(
             KeySelectionMenu(
                 onKeySelected = { keyCode ->
                     val allButtons = loadButtonState(context)
-                    val thumbsticks = allButtons.filter { it.id in listOf(99, 98) }
-                    val otherButtons = allButtons.filter { it.id !in listOf(99, 98) }
+                    val thumbsticks = allButtons.filter { it.id == 99 } + allButtons.filterNot { it.id == 98 }  // Ensure 98 is optional
+                    val otherButtons = allButtons.filterNot { it.id in listOf(98, 99) }
                     val maxExistingId = otherButtons.maxOfOrNull { it.id } ?: 0
                     val newId = maxExistingId + 1
                     val newButtonState = ButtonState(
@@ -408,7 +465,8 @@ fun DynamicButtonManager(
                     UIStateManager.editMode = true
                 },
                 usedKeys = createdButtons.map { it.keyCode },
-                editMode = UIStateManager.editMode
+                editMode = UIStateManager.editMode,
+                context = context
             )
         }
     }
