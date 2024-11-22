@@ -1,1 +1,1 @@
-# launcher-rewind
+Build with ./gradlew assembleDebug
