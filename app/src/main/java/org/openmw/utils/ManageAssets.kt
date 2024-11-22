@@ -141,22 +141,7 @@ class UserManageAssets(val context: Context) {
             File(Constants.USER_OPENMW_CFG).writeText("# This is the user openmw.cfg. Feel free to modify it as you wish.\n")
         }
 
-        // Create default UI
-        File(Constants.USER_UI).mkdirs()
-        val file = File("${Constants.USER_UI}/UI.cfg")
-        if (!file.exists()) {
-            file.createNewFile()
-            file.appendText("""
-                ButtonID_1(60.0;2054.6936;18.942787;false;111;Color.Black;0.25;null)
-                ButtonID_2(60.0;1805.0613;700.42505;false;54;Color.Black;0.25;null)
-                ButtonID_3(60.0;1942.9843;561.5578;false;30;Color.Black;0.25;null)
-                ButtonID_4(60.0;1805.0613;422.69055;false;33;Color.Black;0.25;null)
-                ButtonID_5(60.0;1668.5325;561.5578;false;52;Color.Black;0.25;null)
-                ButtonID_6(60.0;1335.1458;770.3131;false;62;Color.Black;0.25;null)
-                ButtonID_7(60.0;750.73267;770.3131;false;66;Color.Black;0.25;null)
-                ButtonID_99(160.0;200.56776;281.6349;false;29;Color.Black;0.25;null)
-            """.trimIndent())
-        }
+        createUI()
 
         // ButtonID_98(160.0;1199.7069;216.80106;false;98;Color.Green;0.25;null)
 
@@ -177,6 +162,41 @@ class UserManageAssets(val context: Context) {
             Log.d("ManageAssets", "Copying fallback config to ${Constants.OPENMW_FALLBACK_CFG}")
             assetCopier.copy("libopenmw/openmw/openmw.fallback.cfg", Constants.OPENMW_FALLBACK_CFG)
         }
+    }
+
+    fun createUI() {
+        // Create default UI
+        File(Constants.USER_UI).mkdirs()
+        val file = File("${Constants.USER_UI}/UI.cfg")
+        if (!file.exists()) {
+            file.createNewFile()
+            file.appendText("""
+                ButtonID_1(60.0;2054.6936;18.942787;false;111;Color.Black;0.25;null)
+                ButtonID_2(60.0;1805.0613;700.42505;false;54;Color.Black;0.25;null)
+                ButtonID_3(60.0;1942.9843;561.5578;false;30;Color.Black;0.25;null)
+                ButtonID_4(60.0;1805.0613;422.69055;false;33;Color.Black;0.25;null)
+                ButtonID_5(60.0;1668.5325;561.5578;false;52;Color.Black;0.25;null)
+                ButtonID_6(60.0;1335.1458;770.3131;false;62;Color.Black;0.25;null)
+                ButtonID_7(60.0;750.73267;770.3131;false;66;Color.Black;0.25;null)
+                ButtonID_99(160.0;200.56776;281.6349;false;29;Color.Black;0.25;null)
+            """.trimIndent())
+        }
+    }
+
+    fun resetUI() {
+        val uiDir = File(Constants.USER_UI)
+        val file = File(uiDir, "UI.cfg")
+
+        // Delete the UI.cfg file if it exists
+        if (file.exists()) {
+            file.delete()
+        }
+
+        // Delete all .png files in the directory
+        uiDir.listFiles { _, name -> name.endsWith(".png") }?.forEach { it.delete() }
+
+        // Create a new UI configuration
+        createUI()
     }
 
     /**

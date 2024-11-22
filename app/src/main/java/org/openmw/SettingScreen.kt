@@ -57,6 +57,7 @@ import org.openmw.navigation.MyTopBar
 import org.openmw.utils.BouncingBackground
 import org.openmw.utils.ExpandableBox
 import org.openmw.utils.ReadAndDisplayIniValues
+import org.openmw.utils.UserManageAssets
 import org.openmw.utils.exportCrashAndLogcatFiles
 import org.openmw.utils.exportFile
 import org.openmw.utils.exportFilesAndDirectories
@@ -324,6 +325,7 @@ fun OpenOpenMWLogFileDialogButton() {
 fun ActionCardGrid(context: Context) {
     val (expandedIndex, setExpandedIndex) = remember { mutableIntStateOf(-1) }
     val showDialog = remember { mutableStateOf(false) }
+    var showDialog2 = remember { mutableStateOf(false) }
     val gradientColors = listOf(Color(0xFF42A5F5), Color(0xFF478DE0), Color(0xFF3F76D2), Color(0xFF3B5FBA))
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -392,6 +394,46 @@ fun ActionCardGrid(context: Context) {
                         context.startActivity(intent)
                     }) {
                         Text("Configure Controls", color = Color.White)
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Button(onClick = {
+                        showDialog2.value = true
+                    }) {
+                        Text("Reset Controls", color = Color.White)
+                    }
+
+                    if (showDialog2.value) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                showDialog2.value = false
+                            },
+                            title = {
+                                Text(text = "Confirm Reset")
+                            },
+                            text = {
+                                Text("Are you sure you want to reset the controls? This action cannot be undone.")
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        UserManageAssets(context).resetUI()
+                                        showDialog2.value = false
+                                    }
+                                ) {
+                                    Text("Confirm")
+                                }
+                            },
+                            dismissButton = {
+                                Button(
+                                    onClick = {
+                                        showDialog2.value = false
+                                    }
+                                ) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Button(onClick = { setExpandedIndex(-1) }) {

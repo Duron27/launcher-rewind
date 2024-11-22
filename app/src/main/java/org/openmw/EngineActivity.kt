@@ -41,6 +41,7 @@ import org.openmw.ui.controls.loadButtonState
 import org.openmw.ui.controls.saveButtonState
 import org.openmw.ui.overlay.GridOverlay
 import org.openmw.ui.overlay.OverlayUI
+import org.openmw.utils.UserManageAssets
 import org.openmw.utils.enableLogcat
 import kotlin.Boolean
 
